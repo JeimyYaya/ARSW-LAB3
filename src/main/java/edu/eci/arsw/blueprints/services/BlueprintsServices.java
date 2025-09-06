@@ -5,6 +5,7 @@
  */
 package edu.eci.arsw.blueprints.services;
 
+import edu.eci.arsw.blueprints.filters.BlueprintFilter;
 import edu.eci.arsw.blueprints.model.Blueprint;
 import edu.eci.arsw.blueprints.model.Point;
 import edu.eci.arsw.blueprints.persistence.BlueprintNotFoundException;
@@ -12,7 +13,10 @@ import edu.eci.arsw.blueprints.persistence.BlueprintsPersistence;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,16 +25,30 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class BlueprintsServices {
-   
+
+    private final BlueprintsPersistence bpp;
+
+    @Qualifier("subsamplingFilter")
+    private final BlueprintFilter filter;
+
     @Autowired
-    BlueprintsPersistence bpp=null;
-    
-    public void addNewBlueprint(Blueprint bp){
-        
+    public BlueprintsServices(BlueprintsPersistence bpp, @Qualifier("subsamplingFilter") BlueprintFilter filter) {
+        this.bpp = bpp;
+        this.filter = filter;
+    }
+
+    public void addNewBlueprint(Blueprint bp) {
+        try {
+            bpp.saveBlueprint(bp);
+        } catch (edu.eci.arsw.blueprints.persistence.BlueprintPersistenceException e) {
+            throw new RuntimeException("Error saving blueprint", e);
+        }
     }
     
     public Set<Blueprint> getAllBlueprints(){
-        return null;
+        return bpp.getAllBlueprints().stream()
+                .map(filter::applyFilter)
+                .collect(Collectors.toSet());
     }
     
     /**
@@ -41,7 +59,7 @@ public class BlueprintsServices {
      * @throws BlueprintNotFoundException if there is no such blueprint
      */
     public Blueprint getBlueprint(String author,String name) throws BlueprintNotFoundException{
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return filter.applyFilter(bpp.getBlueprint(author, name));
     }
     
     /**
@@ -51,7 +69,9 @@ public class BlueprintsServices {
      * @throws BlueprintNotFoundException if the given author doesn't exist
      */
     public Set<Blueprint> getBlueprintsByAuthor(String author) throws BlueprintNotFoundException{
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return bpp.getBlueprintsByAuthor(author).stream()
+                .map(filter::applyFilter)
+                .collect(Collectors.toSet());
     }
     
 }

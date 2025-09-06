@@ -65,10 +65,46 @@ public class InMemoryPersistenceTest {
         catch (BlueprintPersistenceException ex){
             
         }
-                
-        
+                    
     }
 
+    @Test
+    public void getBlueprintsByAuthorTest() throws Exception {
+        InMemoryBlueprintPersistence ibpp = new InMemoryBlueprintPersistence();
 
-    
+        Point[] pts1 = new Point[]{new Point(5, 5), new Point(10, 10)};
+        Blueprint bp1 = new Blueprint("jeimy", "casa", pts1);
+        ibpp.saveBlueprint(bp1);
+
+        Point[] pts2 = new Point[]{new Point(15, 15), new Point(20, 20)};
+        Blueprint bp2 = new Blueprint("jeimy", "apartamento", pts2);
+        ibpp.saveBlueprint(bp2);
+
+        assertEquals("Author should have 2 blueprints",
+                2, ibpp.getBlueprintsByAuthor("jeimy").size());
+    }
+
+    @Test(expected = BlueprintNotFoundException.class)
+    public void getBlueprintsByNonExistingAuthorTest() throws Exception {
+        InMemoryBlueprintPersistence ibpp = new InMemoryBlueprintPersistence();
+        ibpp.getBlueprintsByAuthor("noexiste");
+    }
+
+    @Test
+    public void getAllBlueprintsTest() throws Exception {
+        InMemoryBlueprintPersistence ibpp = new InMemoryBlueprintPersistence();
+
+        Point[] pts1 = new Point[]{new Point(1, 1), new Point(2, 2)};
+        Blueprint bp1 = new Blueprint("anna", "plano1", pts1);
+        ibpp.saveBlueprint(bp1);
+
+        Point[] pts2 = new Point[]{new Point(3, 3), new Point(4, 4)};
+        Blueprint bp2 = new Blueprint("mark", "plano2", pts2);
+        ibpp.saveBlueprint(bp2);
+
+        assertTrue("All blueprints should contain the saved ones",
+                ibpp.getAllBlueprints().contains(bp1) && ibpp.getAllBlueprints().contains(bp2));
+    }
+
+  
 }
